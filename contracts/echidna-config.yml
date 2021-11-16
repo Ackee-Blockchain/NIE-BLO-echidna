@@ -1,0 +1,12 @@
+# BLACKLIST
+# filterBlacklist: true
+# filterFunctions: ["TEST.reset()"]
+
+# WHITELIST
+# filterBlacklist: false
+# filterFunctions: ["TEST.f(uint256)", "TEST.g(uint256)", "TEST.i(uint256)"]
+
+# ANOTHER OPTIONS
+# testLimit: 100000
+
+

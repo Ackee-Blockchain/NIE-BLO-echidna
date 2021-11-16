@@ -1,2 +1,2 @@
-# NIE-BLO-tutorial-9
-Fuzzy testing with Echidna and Slither analysis
+# State testing
+Basic example for Echidna
