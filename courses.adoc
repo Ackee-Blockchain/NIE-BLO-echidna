@@ -1,0 +1,46 @@
+= 9 - Tutorial
+
+== Tutorial objectives
+
+* Advanced techniques in security auditing
+* Improve code analysis skills
+* Ability to write fuzzy tests
+
+== Tutorial pre-requisites
+* Solidity fundamentals
+* (optional) Docker (https://docs.docker.com/get-docker/)
+* Echidna (https://github.com/crytic/echidna)
+    - Easiest way is to pull docker image `trailofbits/echidna` with fixed compiler version or more universal from Ackee Blockchain `abch/toolset`
+
+[CAUTION]
+====
+Computers in the laboratory don't allow to install programs and save their state between login sessions. Please bring your own hardware for these tutorials.
+====
+
+== Slither
+Solidity static code analysis framework
+
+Whitepaper: https://www.researchgate.net/publication/333700886_Slither_A_Static_Analysis_Framework_For_Smart_Contracts
+
+=== Useful printers
+* `contract-summary` - Print a summary of the contracts
+* `function-summary` - Print a summary of the functions
+* `human-summary` - Print a human-readable summary of the contracts
+* `inheritance` - Print the inheritance relations between contracts
+* `modifiers` - Print the modifiers called by each function
+* `require` - Print the require and assert calls of each function
+* `variable-order` - Print the storage order of the state variables
+
+=== Example
+```
+$ slither . --print contract-summary
+```
+== Echidna
+Haskell program designed for fuzzy testing of Ethereum smart contracts
+
+Whitepaper: https://www.researchgate.net/publication/343048222_Echidna_effective_usable_and_fast_fuzzing_for_smart_contracts
+
+=== Example
+```
+$ echidna-test helloworld.sol --contract TEST --config echidna-config.yaml
+```
