@@ -3,11 +3,14 @@
 == Tutorial objectives
 
 * Advanced techniques in security auditing
-* Improve code analysis skills
-* Ability to write fuzzy tests
+* Static analysis tools
+* Fuzz and property-based testing
 
 == Tutorial pre-requisites
 * Solidity fundamentals
+* https://github.com/crytic/slither[Slither] (`pip3 install slither-analyzer`)
+* https://github.com/Ackee-Blockchain/woke[Woke] incl. fuzzer (`pip3 install "woke[fuzzer]"`)
+
 * (optional) Docker (https://docs.docker.com/get-docker/)
 * Echidna (https://github.com/crytic/echidna)
     - Easiest way is to pull docker image `trailofbits/echidna` with fixed compiler version or more universal from Ackee Blockchain `abch/toolset`
@@ -22,6 +25,11 @@ Solidity static code analysis framework
 
 Whitepaper: https://www.researchgate.net/publication/333700886_Slither_A_Static_Analysis_Framework_For_Smart_Contracts
 
+=== Detectors
+```
+$ slither .
+```
+
 === Useful printers
 * `contract-summary` - Print a summary of the contracts
 * `function-summary` - Print a summary of the functions
@@ -31,7 +39,7 @@ Whitepaper: https://www.researchgate.net/publication/333700886_Slither_A_Static_
 * `require` - Print the require and assert calls of each function
 * `variable-order` - Print the storage order of the state variables
 
-=== Example
+==== Example
 ```
 $ slither . --print contract-summary
 ```
@@ -43,4 +51,80 @@ Whitepaper: https://www.researchgate.net/publication/343048222_Echidna_effective
 === Example
 ```
 $ echidna-test helloworld.sol --contract TEST --config echidna-config.yaml
+```
+
+== Woke
+
+=== Detectors
+```
+$ woke detect .
+```
+or automatically in https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity[Tools for Solidity] VS Code extension.
+
+=== Property-based fuzz testing
+
+Documentation: https://ackeeblockchain.com/woke/docs/1.2.0/fuzzer
+
+[CAUTION]
+====
+Woke fuzzer currently relies on the Brownie testing framework. Brownie is expected to be replaced by the Woke testing framework in Woke 2.0.
+====
+
+==== Terminology
+* *flow* - a single operation (a function) randomly picked from a set of operations by the fuzzer
+* *invariant* - a function executed after each flow, usually containing assertions
+* *sequence* - a sequence of flows and invariants; after each sequence, the blockchain state is reset
+* *campaign* - an object allowing to define number of sequences and number of flows in each sequence; automatically runs flows and invariants
+
+==== Example
+
+```solidity
+contract Counter {
+    uint256 public count;
+
+    function increment() public {
+        count += 1;
+    }
+
+    function decrement() public {
+        count -= 1;
+    }
+}
+```
+
+```python
+import brownie
+from woke.fuzzer.campaign import Campaign
+from woke.fuzzer.decorators import flow, invariant
+from woke.fuzzer.random import random_account
+
+
+class Test:
+    def __init__(self, contract_type) -> None:
+        self.owner = random_account()
+        self.contract = contract_type.deploy({"from": self.owner})
+        self.counter_value = 0
+
+    @flow
+    def flow_increment(self):
+        self.contract.increment({"from": random_account()})
+        self.counter_value += 1
+
+    @flow
+    def flow_decrement(self):
+        if self.counter_value == 0:
+            with brownie.reverts():
+                self.contract.decrement({"from": random_account()})
+        else:
+            self.contract.decrement({"from": random_account()})
+            self.counter_value -= 1
+
+    @invariant
+    def invariant_counter_value(self):
+        assert self.contract.count() == self.counter_value
+
+
+def test_counter(Counter):
+    campaign = Campaign(lambda: Test(Counter))
+    campaign.run(100, 40)
 ```
