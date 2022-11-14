@@ -43,15 +43,6 @@ $ slither .
 ```
 $ slither . --print contract-summary
 ```
-== Echidna
-Haskell program designed for fuzzy testing of Ethereum smart contracts
-
-Whitepaper: https://www.researchgate.net/publication/343048222_Echidna_effective_usable_and_fast_fuzzing_for_smart_contracts
-
-=== Example
-```
-$ echidna-test helloworld.sol --contract TEST --config echidna-config.yaml
-```
 
 == Woke
 
@@ -59,11 +50,14 @@ $ echidna-test helloworld.sol --contract TEST --config echidna-config.yaml
 ```
 $ woke detect .
 ```
-or automatically in https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity[Tools for Solidity] VS Code extension.
+or automatically in the https://marketplace.visualstudio.com/items?itemName=AckeeBlockchain.tools-for-solidity[Tools for Solidity] VS Code extension.
 
 === Property-based fuzz testing
 
-Documentation: https://ackeeblockchain.com/woke/docs/1.2.0/fuzzer
+* multiprocessing implementation
+* can automatically launch ipdb (IPython-enhanced debugger) on exception
+
+Documentation: https://ackeeblockchain.com/woke/docs/1.2.1/fuzzer
 
 [CAUTION]
 ====
@@ -75,6 +69,8 @@ Woke fuzzer currently relies on the Brownie testing framework. Brownie is expect
 * *invariant* - a function executed after each flow, usually containing assertions
 * *sequence* - a sequence of flows and invariants; after each sequence, the blockchain state is reset
 * *campaign* - an object allowing to define number of sequences and number of flows in each sequence; automatically runs flows and invariants
+
+Each flow can be assigned a weight, which determines the probability of the flow being picked. The default weight is 100.
 
 ==== Example
 
@@ -95,7 +91,7 @@ contract Counter {
 ```python
 import brownie
 from woke.fuzzer.campaign import Campaign
-from woke.fuzzer.decorators import flow, invariant
+from woke.fuzzer.decorators import flow, invariant, weight
 from woke.fuzzer.random import random_account
 
 
@@ -111,6 +107,7 @@ class Test:
         self.counter_value += 1
 
     @flow
+    @weight(101)
     def flow_decrement(self):
         if self.counter_value == 0:
             with brownie.reverts():
@@ -127,4 +124,14 @@ class Test:
 def test_counter(Counter):
     campaign = Campaign(lambda: Test(Counter))
     campaign.run(100, 40)
+```
+
+== Echidna
+Haskell program designed for fuzzy testing of Ethereum smart contracts
+
+Whitepaper: https://www.researchgate.net/publication/343048222_Echidna_effective_usable_and_fast_fuzzing_for_smart_contracts
+
+=== Example
+```
+$ echidna-test helloworld.sol --contract TEST --config echidna-config.yaml
 ```
