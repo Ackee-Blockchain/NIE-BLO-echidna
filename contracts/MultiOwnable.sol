@@ -2,6 +2,8 @@
 pragma solidity ^0.8.4;
 
 contract MultiOwnable {
+    event OwnerAdded(address indexed newOwner, address indexed invitedBy);
+
     mapping(address => bool) owners;
     uint160 public pendingOwner;
 
@@ -27,5 +29,6 @@ contract MultiOwnable {
         require(owners[invitedBy], "Can only be invited by owner");
 
         owners[msg.sender] = true;
+        emit OwnerAdded(msg.sender, invitedBy);
     }
 }
